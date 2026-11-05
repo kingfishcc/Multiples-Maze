@@ -188,17 +188,26 @@
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
 
-        /* 升級版精美沉浸式背景 */
+        /* 自訂背景圖片與半透明遮罩 */
         .theme-jungle {
-            background: radial-gradient(circle at 50% 20%, #10b981 0%, #047857 40%, #064e3b 100%);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('jungle.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
         }
         .theme-ancient {
-            background: radial-gradient(circle at 50% 20%, #d97706 0%, #b45309 40%, #78350f 100%);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('Jurassic.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
         }
         .theme-space {
-            background: radial-gradient(circle at 50% 20%, #3b82f6 0%, #1e3a8a 40%, #090d16 100%);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('universe.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
         }
     </style>
@@ -219,8 +228,8 @@
         <div class="flex flex-col gap-3 w-fit relative">
             
             <div class="w-full flex justify-between items-center gap-4 mb-1">
-                <h1 class="text-3xl md:text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] bg-white/20 px-5 py-2.5 rounded-2xl backdrop-blur-md border border-white/30 whitespace-nowrap">
-                    倍數迷宮 <span class="text-xs align-top bg-amber-400 text-amber-950 font-extrabold px-2.5 py-1 rounded-full shadow">AI 加強版</span>
+                <h1 class="text-3xl md:text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-2 py-1 whitespace-nowrap">
+                    倍數迷宮
                 </h1>
                 <button id="showLeaderboardBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg transition duration-200 flex items-center whitespace-nowrap border border-indigo-400/50">
                     查看排行榜
@@ -426,52 +435,14 @@
         let secondsElapsed = 0;
         let isAiThinking = false;
 
-        // --- SVG 圖示庫 (精美向量圖) ---
+        // --- 自訂圖片圖示庫 ---
         const ICONS = {
-            monkey: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="32" cy="34" r="22" fill="#d97706"/>
-                <circle cx="14" cy="28" r="10" fill="#d97706"/>
-                <circle cx="50" cy="28" r="10" fill="#d97706"/>
-                <circle cx="14" cy="28" r="6" fill="#fde68a"/>
-                <circle cx="50" cy="28" r="6" fill="#fde68a"/>
-                <path d="M16 38C16 48 22 54 32 54C42 54 48 48 48 38H16Z" fill="#fde68a"/>
-                <ellipse cx="32" cy="38" rx="14" ry="10" fill="#fef3c7"/>
-                <circle cx="25" cy="34" r="3" fill="#1e293b"/>
-                <circle cx="39" cy="34" r="3" fill="#1e293b"/>
-                <ellipse cx="32" cy="41" rx="4" ry="2.5" fill="#b45309"/>
-                <path d="M29 44C30 46 34 46 35 44" stroke="#b45309" stroke-width="2" stroke-linecap="round"/>
-            </svg>`,
-            banana: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 48C18 36 28 22 48 12C48 12 42 26 34 38C26 50 12 48 12 48Z" fill="#facc15"/>
-                <path d="M12 48C18 36 28 22 48 12C44 22 36 36 26 46C20 52 12 48 12 48Z" fill="#eab308"/>
-                <path d="M48 12C52 10 56 8 58 6C58 10 54 14 48 12Z" fill="#713f12"/>
-            </svg>`,
-            dino: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 32L14 20L22 24L28 16L32 26H44C48 26 52 30 52 36C52 44 46 52 36 52H24C16 52 14 44 18 40L20 32Z" fill="#10b981"/>
-                <circle cx="42" cy="32" r="3" fill="#ffffff"/>
-                <circle cx="43" cy="32" r="1.5" fill="#0f172a"/>
-                <path d="M48 38C52 39 56 42 58 46" stroke="#059669" stroke-width="4" stroke-linecap="round"/>
-                <path d="M24 52V58M36 52V58" stroke="#047857" stroke-width="5" stroke-linecap="round"/>
-            </svg>`,
-            egg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="32" cy="34" rx="18" ry="22" fill="#fef3c7"/>
-                <ellipse cx="32" cy="34" rx="18" ry="22" stroke="#d97706" stroke-width="3"/>
-                <path d="M20 26C24 22 40 22 44 26" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-                <path d="M22 42C26 46 38 46 42 42" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-            </svg>`,
-            astronaut: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="32" cy="28" r="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
-                <ellipse cx="32" cy="28" rx="10" ry="7" fill="#0f172a"/>
-                <path d="M22 42H42C46 42 50 46 50 52V56H14V52C14 46 18 42 22 42Z" fill="#e2e8f0"/>
-                <circle cx="28" cy="26" r="1.5" fill="#38bdf8"/>
-            </svg>`,
-            rocket: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M32 8C32 8 20 20 20 40H44C44 20 32 8 32 8Z" fill="#ef4444"/>
-                <circle cx="32" cy="28" r="5" fill="#38bdf8" stroke="#ffffff" stroke-width="2"/>
-                <path d="M20 36L10 46H20V36Z" fill="#cbd5e1"/>
-                <path d="M44 36L54 46H44V36Z" fill="#cbd5e1"/>
-                <path d="M26 40H38V52C38 56 32 60 32 60C32 60 26 56 26 52V40Z" fill="#f59e0b"/>
-            </svg>`
+            monkey: `<img src="monkey.png" class="w-full h-full object-contain" alt="猴子">`,
+            banana: `<img src="banana.png" class="w-full h-full object-contain" alt="香蕉">`,
+            dino: `<img src="dino.png" class="w-full h-full object-contain" alt="恐龍">`,
+            egg: `<img src="egg.png" class="w-full h-full object-contain" alt="恐龍蛋">`,
+            astronaut: `<img src="astronaut.png" class="w-full h-full object-contain" alt="太空人">`,
+            rocket: `<img src="rocket.png" class="w-full h-full object-contain" alt="火箭">`
         };
 
         // --- 常數設定 (Constants) ---
@@ -532,7 +503,7 @@
                 cellSize: 'w-10 h-10 text-lg md:w-12 md:h-12', 
                 name: '👨‍🚀 太空人找火箭', 
                 themeClass: 'theme-space',
-                playerIcon: '👨‍🚀', // Fallback or SVG
+                playerIcon: ICONS.astronaut, 
                 goalIcon: ICONS.rocket,
                 startLabel: '太空站',
                 endLabel: '發射基地',
