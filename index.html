@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>倍數迷宮 + AI</title>
+    <title>倍數迷宮</title>
     <!-- 引入正統源泉圓體 (GenSenRounded2 TC) -->
     <link rel="stylesheet" href="https://fontsapi.zeoseven.com/303/main/result.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -28,12 +28,12 @@
             user-select: none;
             transition: all 0.2s;
             position: relative;
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            background-color: #ffffff; /* 改為不透明的純白，確保在背景圖上清晰可見 */
+            border: 2px solid #e2e8f0;
             border-radius: 0.75rem;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         @media (hover: hover) {
@@ -228,7 +228,8 @@
         <div class="flex flex-col gap-3 w-fit relative">
             
             <div class="w-full flex justify-between items-center gap-4 mb-1">
-                <h1 class="text-3xl md:text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-2 py-1 whitespace-nowrap">
+                <!-- 移除白色文字與陰影，改回清晰的深色純文字標題 -->
+                <h1 class="text-3xl md:text-4xl font-black text-slate-800 px-2 py-1 whitespace-nowrap">
                     倍數迷宮
                 </h1>
                 <button id="showLeaderboardBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg transition duration-200 flex items-center whitespace-nowrap border border-indigo-400/50">
