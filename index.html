@@ -17,7 +17,7 @@
             font-family: var(--main-font) !important;
         }
 
-        /* 自定義樣式 */
+        /* 迷宮棋盤格子樣式 */
         .maze-cell {
             aspect-ratio: 1;
             display: flex;
@@ -28,7 +28,7 @@
             user-select: none;
             transition: all 0.2s;
             position: relative;
-            background-color: #ffffff; /* 不透明純白，確保在背景圖上清晰可見 */
+            background-color: #ffffff;
             border: 2px solid #e2e8f0;
             border-radius: 0.75rem;
             touch-action: manipulation;
@@ -45,6 +45,7 @@
             }
         }
         
+        /* 圖片圖示容器 */
         .icon-marker {
             width: 80%;
             height: 80%;
@@ -80,16 +81,17 @@
             100% { box-shadow: 0 0 0 2px #3b82f6 inset, 0 0 5px rgba(59, 130, 246, 0.5); }
         }
 
+        /* 相鄰可移動方向的黃色高亮提示 */
         .highlight-move {
-            box-shadow: 0 0 0 4px #fbbf24 inset, 0 0 15px rgba(251, 191, 36, 0.6);
-            background-color: rgba(254, 243, 199, 0.9);
+            box-shadow: 0 0 0 4px #fbbf24 inset, 0 0 15px rgba(251, 191, 36, 0.8);
+            background-color: rgba(254, 243, 199, 0.95);
             animation: pulse-yellow 1.5s infinite;
             z-index: 10;
         }
         @keyframes pulse-yellow {
-            0% { background-color: rgba(254, 243, 199, 0.7); box-shadow: 0 0 0 3px #fbbf24 inset; }
+            0% { background-color: rgba(254, 243, 199, 0.8); box-shadow: 0 0 0 3px #fbbf24 inset; }
             50% { background-color: rgba(254, 243, 199, 1); box-shadow: 0 0 0 6px #f59e0b inset; }
-            100% { background-color: rgba(254, 243, 199, 0.7); box-shadow: 0 0 0 3px #fbbf24 inset; }
+            100% { background-color: rgba(254, 243, 199, 0.8); box-shadow: 0 0 0 3px #fbbf24 inset; }
         }
 
         .label-text {
@@ -117,16 +119,6 @@
         .end-cell {
             background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
             border-color: #fb7185;
-        }
-
-        .path {
-            background-color: rgba(254, 240, 138, 0.6) !important;
-            border-color: rgba(252, 211, 77, 0.8);
-        }
-        
-        .hide-number > span {
-            opacity: 0;
-            pointer-events: none;
         }
 
         #loadingOverlay {
@@ -161,51 +153,27 @@
         #toast.show {
             opacity: 1;
         }
-        
-        .ai-sparkle {
-            background: linear-gradient(45deg, #6366f1, #8b5cf6, #d946ef);
-            background-size: 200% 200%;
-            animation: gradient-shift 3s ease infinite;
-        }
-        @keyframes gradient-shift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
 
-        @keyframes bomb-pop {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.6); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-        }
-        .bomb-effect {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            font-size: 3rem;
-            pointer-events: none;
-            z-index: 50;
-            animation: bomb-pop 0.6s ease-out forwards;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        }
-
-        /* 對應您在 GitHub 根目錄上傳的背景圖片：jungle.png, Jurassic.png, universe.png */
+        /* 根目錄背景圖片設定（附帶防護遮罩與 fallback 顏色） */
         .theme-jungle {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('jungle.png');
+            background-color: #064e3b;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('jungle.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
         .theme-ancient {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('Jurassic.png');
+            background-color: #78350f;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('Jurassic.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
         .theme-space {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('universe.png');
+            background-color: #1e1b4b;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('universe.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -213,1187 +181,644 @@
         }
     </style>
 </head>
-<body id="gameBody" class="font-sans flex flex-col min-h-screen transition-colors duration-500">
+<body id="gameBody" class="font-sans flex flex-col min-h-screen transition-colors duration-500 theme-jungle">
+
+    <!-- 網頁一開始的初始登入/身份選擇 Modal -->
+    <div id="initialLoginModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-md flex items-center justify-center z-[120] p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center border border-slate-100">
+            <h2 class="text-3xl font-black text-slate-800 mb-2">歡迎來到倍數迷宮</h2>
+            <p class="text-slate-500 text-sm mb-8 font-medium">請選擇您的進入方式以開始冒險！</p>
+            
+            <div class="space-y-4">
+                <button id="startGoogleLoginBtn" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700 font-extrabold py-3.5 px-6 rounded-2xl shadow-sm transition duration-200">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.32 7.23 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.14 0 9.87 0 11.7s.43 3.56 1.18 5.08l4.09-2.54z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.15 2.68 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                    </svg>
+                    <span>使用 Google 帳戶登入 (可記錄排行榜)</span>
+                </button>
+
+                <button id="startGuestLoginBtn" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold py-3.5 px-6 rounded-2xl shadow-sm transition duration-200">
+                    👤 訪客登入 (不計入排行榜成績)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 實際輸入 Google 帳號的 Modal -->
+    <div id="googleLoginModal" class="fixed inset-0 bg-black bg-opacity-65 backdrop-blur-md flex items-center justify-center hidden z-[130] p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center border border-slate-100">
+            <h2 class="text-2xl font-black text-slate-800 mb-1">使用 Google 帳戶登入</h2>
+            <p class="text-slate-500 text-sm mb-6 font-medium">連線至倍數迷宮 Google 試算表雲端排行榜</p>
+            
+            <div class="space-y-4 text-left mb-6">
+                <div>
+                    <label class="block text-slate-700 text-xs font-extrabold mb-1.5">Google 電子郵件</label>
+                    <input type="email" id="loginEmailInput" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="name@example.com">
+                </div>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <button id="cancelLoginBtn" class="px-5 py-2.5 rounded-xl text-slate-600 font-bold hover:bg-slate-100">取消</button>
+                <button id="confirmLoginBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-md transition">下一步</button>
+            </div>
+        </div>
+    </div>
 
     <div id="loadingOverlay" class="hidden">
-        <div class="text-2xl font-bold text-emerald-600 animate-pulse flex flex-col items-center bg-white p-6 rounded-2xl shadow-2xl border border-emerald-100">
-             <span>資料處理中……</span>
-             <span class="text-sm text-gray-500 mt-2">(小幫手正在整理)</span>
-        </div>
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
     </div>
 
-    <div id="toast">冒險紀錄儲存成功</div>
+    <div id="toast">提示訊息</div>
 
-    <div class="container mx-auto p-4 flex-grow flex flex-col justify-center items-center">
-        
-        <div class="flex flex-col gap-3 w-fit relative">
-            
-            <div class="w-full flex justify-between items-center gap-4 mb-1">
-                <!-- 大標題改回純色，無閃爍動畫、無底色 -->
-                <h1 class="text-3xl md:text-4xl font-black text-white px-2 py-1 whitespace-nowrap drop-shadow-md">
-                    倍數迷宮
-                </h1>
-                <button id="showLeaderboardBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg transition duration-200 flex items-center whitespace-nowrap border border-indigo-400/50">
-                    查看排行榜
-                </button>
-            </div>
+    <!-- 主介面 Header -->
+    <header class="w-full py-5 px-6 flex justify-between items-center max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-black text-white drop-shadow-md tracking-wider">倍數迷宮</h1>
+        <button id="showLeaderboardBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-2xl shadow-lg transition text-sm md:text-base">
+            🏆 查看排行榜
+        </button>
+    </header>
 
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 pb-12 flex flex-col gap-6">
+        <!-- 控制面板：三行獨立排版 -->
+        <div class="bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col gap-4">
+            <!-- 第一行：選擇難度 -->
             <div class="w-full">
-                <div class="bg-white/95 backdrop-blur-xl p-5 rounded-2xl shadow-2xl mb-2 border-b-6 border-blue-400">
-                    <div class="flex flex-wrap justify-center gap-4 mb-4">
-                        <div class="flex items-center bg-slate-100/80 p-2.5 rounded-xl shadow-inner border border-slate-200/60">
-                            <span class="mr-2 font-bold text-slate-700 whitespace-nowrap">選擇難度：</span>
-                            <select id="difficultySelect" class="border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-bold text-slate-800 shadow-sm">
-                                <option value="easy" selected>🐵 簡單：猴子找香蕉 (5x5)</option>
-                                <option value="medium">🦖 中等：恐龍找恐龍蛋 (8x8)</option>
-                                <option value="hard">👨‍🚀 挑戰：太空人找火箭 (8x8)</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center flex-wrap gap-2 bg-slate-100/80 p-2.5 rounded-xl shadow-inner border border-slate-200/60">
-                             <span class="mr-2 font-bold text-slate-700 whitespace-nowrap">選擇倍數：</span>
-                             <div id="multipleButtons" class="flex gap-2 flex-wrap">
-                                 <button data-multiple="2" class="multiple-btn bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">2</button>
-                                 <button data-multiple="3" class="multiple-btn bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">3</button>
-                                 <button data-multiple="4" class="multiple-btn bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">4</button>
-                                 <button data-multiple="5" class="multiple-btn bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">5</button>
-                                 <button data-multiple="9" class="multiple-btn bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">9</button>
-                                 <button data-multiple="11" class="multiple-btn bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3.5 rounded-xl shadow transition duration-200">11</button>
-                             </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-center gap-4 mt-2 flex-wrap">
-                        <button id="newGameBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 border border-emerald-400/50">開始冒險</button>
-                        <button id="resetBtn" class="bg-amber-500 hover:bg-amber-400 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 border border-amber-300/50">重置路線</button>
-                        <button id="aiHintBtn" class="ai-sparkle text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 flex items-center border border-purple-400/50">
-                            <span>小幫手提示</span>
-                        </button>
-                    </div>
-                </div>
+                <label class="block text-xs font-extrabold text-slate-500 mb-1">選擇難度：</label>
+                <select id="difficultySelect" class="w-full bg-slate-50 border border-slate-200 font-bold text-slate-700 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="easy">🐵 簡單：猴子找香蕉 (5x5)</option>
+                    <option value="medium">🦖 中等：恐龍找蛋 (7x7)</option>
+                    <option value="hard">🚀 挑戰：太空人找火箭 (9x9)</option>
+                </select>
             </div>
 
-            <div id="ruleTip" class="w-full bg-white/95 backdrop-blur-xl border-l-6 border-blue-500 text-slate-800 p-4 mb-2 rounded-2xl shadow-xl transition-all duration-300">
-                <div class="flex items-start">
-                    <div class="text-3xl mr-3">💡</div>
-                    <div class="flex-grow">
-                        <p class="font-extrabold text-lg mb-1 text-slate-900">冒險線索： <span id="currentMultipleNum" class="text-blue-600">2</span> 的倍數判別法</p>
-                        <p id="currentRuleText" class="text-slate-700 mb-2 whitespace-nowrap pb-1 font-semibold">個位數字是 0、2、4、6、8 的整數。</p>
-                        <div id="ruleExample" class="bg-slate-50 p-3 rounded-xl text-slate-700 border border-slate-200 font-medium">
-                            <!-- 範例將由 JS 填充 -->
-                        </div>
-                        <div id="aiHintContainer" class="hidden mt-3 bg-indigo-50 p-3.5 rounded-xl border border-indigo-200 text-indigo-900 animate-bounce-in font-semibold">
-                            <strong class="block mb-1 text-indigo-700">小幫手說：</strong>
-                            <p id="aiHintText">正在思考中……</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <!-- 第二行：選擇倍數 -->
             <div class="w-full">
-                <div class="flex justify-between items-center mb-2 px-5 bg-white/90 backdrop-blur-md rounded-2xl p-3 w-full shadow-lg border border-white/60">
-                     <div id="timer" class="text-lg font-mono text-slate-800 font-extrabold">時間：00:00</div>
-                     <div id="gameStatus" class="text-lg font-extrabold text-slate-800"></div>
-                     <div id="stepCount" class="text-lg font-mono text-slate-800 font-extrabold">步數：0</div>
+                <label class="block text-xs font-extrabold text-slate-500 mb-1">選擇倍數：</label>
+                <div id="multipleButtons" class="flex flex-wrap gap-2">
+                    <button onclick="setMultiple(2)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-blue-600 text-white shadow-md" data-mult="2">2</button>
+                    <button onclick="setMultiple(3)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700" data-mult="3">3</button>
+                    <button onclick="setMultiple(4)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700" data-mult="4">4</button>
+                    <button onclick="setMultiple(5)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700" data-mult="5">5</button>
+                    <button onclick="setMultiple(9)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700" data-mult="9">9</button>
+                    <button onclick="setMultiple(11)" class="flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700" data-mult="11">11</button>
                 </div>
             </div>
 
-            <!-- 隱形支架，確保寬度最少是 11 的判別法那麼寬 -->
-            <div class="absolute -bottom-10 -z-10 invisible h-0 border-l-4 border-transparent p-4 w-full overflow-hidden">
-                <div class="flex items-start">
-                    <div class="text-3xl mr-3">💡</div>
-                    <div class="flex-grow">
-                        <p class="font-bold text-lg mb-1">冒險線索： 11 的倍數判別法</p>
-                        <p class="text-slate-700 mb-2 whitespace-nowrap pb-1">奇數位（第 1, 3, 5, 7 個）數字和與偶數位（第 2, 4, 6, 8 個）數字和的差是 11 的倍數（含 0）。</p>
+            <!-- 第三行：功能按鈕 -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full pt-1">
+                <button id="startBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-5 rounded-2xl shadow-md transition">開始冒險</button>
+                <button id="resetBtn" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-5 rounded-2xl shadow-md transition">重置路線</button>
+                <button id="hintBtn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-extrabold py-3 px-5 rounded-2xl shadow-md transition">小幫手提示</button>
+            </div>
+        </div>
+
+        <!-- 冒險線索與範例看板 -->
+        <div class="bg-white/95 backdrop-blur-md p-5 rounded-3xl shadow-xl border border-slate-100 flex flex-col gap-3">
+            <div class="flex items-center gap-4">
+                <div class="text-2xl">💡</div>
+                <div>
+                    <div class="text-xs font-bold text-slate-400">冒險線索</div>
+                    <div id="ruleDescription" class="text-slate-800 font-extrabold text-base md:text-lg">
+                        請選擇倍數與難度開始遊戲
                     </div>
                 </div>
             </div>
-
-        </div> <!-- End Content Wrapper -->
-
-        <div id="mazeContainer" class="flex justify-center items-center flex-grow overflow-auto p-2 mt-2">
-            <div id="mazeGrid" class="grid gap-2 bg-white/20 backdrop-blur-md p-4 rounded-3xl shadow-2xl border-2 border-white/40">
-                <!-- 迷宮格子將由 JavaScript 生成 -->
+            <div id="ruleExampleBox" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs md:text-sm font-bold text-slate-700 flex items-center gap-2">
+                範例：<span class="text-indigo-600 font-black">78<span class="bg-rose-100 text-rose-600 px-1 rounded">4</span></span>，個位數字是 4，所以 784 是 2 的倍數。
             </div>
         </div>
-        
-    </div>
 
-    <!-- 恭喜過關 Modal -->
-    <div id="winModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-fit min-w-[320px] mx-auto animate-bounce-in border-b-8 border-amber-500 my-8">
-            <h2 class="text-4xl font-black text-amber-600 mb-3">任務完成！</h2>
-            <p class="text-slate-600 text-lg font-bold mb-4">恭喜你成功通過了迷宮並找到寶藏！</p>
+        <!-- 狀態計分板 -->
+        <div class="bg-white/95 backdrop-blur-md px-6 py-4 rounded-3xl shadow-xl border border-slate-100 flex justify-between items-center text-slate-700 font-extrabold">
+            <div class="flex items-center gap-2">
+                時間：<span id="timerText" class="text-slate-800">00:00</span>
+            </div>
+            <div id="feedbackMsg" class="text-emerald-500 text-sm font-black">
+                好棒 👆 請繼續前進！
+            </div>
+            <div class="flex items-center gap-2">
+                步數：<span id="stepsText" class="text-slate-800">0</span>
+            </div>
+        </div>
+
+        <!-- 迷宮棋盤 -->
+        <div class="bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-slate-100 flex justify-center items-center">
+            <div id="mazeContainer" class="grid gap-2 w-full max-w-lg mx-auto"></div>
+        </div>
+    </main>
+
+    <!-- 勝利彈窗 -->
+    <div id="winModal" class="fixed inset-0 bg-black bg-opacity-65 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center border border-slate-100">
+            <div class="text-6xl mb-3">🎉</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">恭喜通關！</h2>
+            <p class="text-slate-600 text-base font-bold mb-6">你成功帶領夥伴抵達終點！</p>
             
-            <div id="aiTreasureContainer" class="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border-2 border-amber-200 relative overflow-hidden shadow-inner">
-                 <div class="absolute top-0 right-0 opacity-10 text-6xl">✨</div>
-                 <h3 class="text-xl font-extrabold text-amber-800 mb-2 flex items-center justify-center">
-                    寶藏鑑定書
-                 </h3>
-                 <div id="aiTreasureText" class="text-amber-950 font-bold text-left leading-relaxed min-h-[80px] flex items-center justify-center">
-                     正在鑑定中……
-                 </div>
+            <div class="bg-slate-50 p-4 rounded-2xl mb-6 text-left space-y-2 border border-slate-200 font-bold text-sm text-slate-700">
+                <div class="flex justify-between"><span>耗費時間：</span><span id="finalTime" class="text-indigo-600">0秒</span></div>
+                <div class="flex justify-between"><span>總計步數：</span><span id="finalSteps" class="text-indigo-600">0步</span></div>
             </div>
 
-            <div id="winStats" class="text-slate-700 mb-6 text-base bg-slate-100 p-4 rounded-2xl font-bold shadow-sm"></div>
-
-            <div class="mb-6">
-                <label for="playerNameInput" class="block text-slate-700 text-sm font-extrabold mb-2 text-left">請輸入你的名字或座號以保存紀錄：</label>
-                <input type="text" id="playerNameInput" class="shadow-inner border border-slate-300 rounded-xl w-full py-3 px-4 text-slate-800 font-bold leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="例如：701 李小蓁">
+            <div class="mb-6 text-left">
+                <label class="block text-slate-700 text-xs font-extrabold mb-1.5">輸入大名以記錄榮譽：</label>
+                <input type="text" id="playerNameInput" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="例如：數學小達人">
             </div>
 
-            <div class="flex gap-4 justify-center flex-wrap">
-                <button id="submitScoreBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3 px-6 rounded-2xl shadow-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-300 flex-grow sm:flex-grow-0 whitespace-nowrap">
-                    提交並再玩一次
-                </button>
-                <button id="playAgainBtn" class="bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl shadow-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-slate-300 flex-grow sm:flex-grow-0 whitespace-nowrap">
-                    不儲存，直接重玩
-                </button>
+            <div class="flex gap-3">
+                <button id="submitScoreBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition">儲存成績</button>
+                <button id="playAgainBtn" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold py-3.5 px-6 rounded-2xl transition">再玩一次</button>
             </div>
         </div>
     </div>
 
-    <!-- 排行榜 Modal -->
-    <div id="leaderboardModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="relative mb-6 text-center">
-                <h2 class="text-3xl font-black text-indigo-700">探險家排行榜</h2>
-                <button id="clearLeaderboardBtn" class="absolute left-0 top-0 bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-2 px-4 rounded-xl shadow text-xs transition-transform transform hover:scale-105">
-                    清除所有紀錄
-                </button>
-                <button id="closeLeaderboardBtn" class="absolute right-0 top-0 text-slate-400 hover:text-slate-600 text-3xl font-bold">&times;</button>
+    <!-- 排行榜彈窗 -->
+    <div id="leaderboardModal" class="fixed inset-0 bg-black bg-opacity-65 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🏆 雲端榮譽排行榜</h2>
+                <button id="closeLeaderboardBtn" class="text-slate-400 hover:text-slate-700 font-bold text-xl px-2">✕</button>
             </div>
-            <div class="overflow-auto flex-grow rounded-2xl border border-slate-200 shadow-inner">
-                <table class="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">時間</th>
-                            <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">探險家</th>
-                            <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">難度</th>
-                            <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">目標倍數</th>
-                             <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">步數</th>
-                            <th class="px-5 py-3 border-b-2 border-slate-200 bg-slate-100 text-left text-xs font-extrabold text-slate-600 uppercase tracking-wider whitespace-nowrap">耗時（秒）</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboardBody" class="font-semibold text-slate-700">
-                        <!-- 數據將由 JS 填充 -->
-                    </tbody>
-                </table>
-                <p id="noDataMsg" class="text-center text-slate-500 py-8 font-bold hidden">目前還沒有尋寶紀錄喔，請探險家開始冒險！</p>
+            <div id="leaderboardContent" class="overflow-y-auto flex-grow pr-1 text-slate-700">
+                <div class="text-center py-8 text-slate-400 font-bold">載入中...</div>
             </div>
         </div>
     </div>
 
-    <!-- 確認清除 Modal -->
-    <div id="confirmClearModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center hidden z-[101] p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-fit mx-auto animate-bounce-in border-b-8 border-rose-500">
-            <h2 class="text-3xl font-black text-rose-600 mb-4">⚠️ 確定要清除嗎？ ⚠️</h2>
-            <p class="text-slate-700 text-lg mb-6 whitespace-nowrap font-bold">
-                此按鍵<span class="font-black text-rose-600 underline">只有老師</span>可以按！！！
-                <br>
-                將會刪除<span class="font-black text-rose-600 underline">所有</span>探險家的紀錄，而且無法復原！！！
-            </p>
-            <div class="flex gap-4 justify-center">
-                <button id="confirmClearBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 px-8 rounded-2xl shadow-lg transition duration-200 transform hover:scale-105">
-                    確定清除
-                </button>
-                <button id="cancelClearBtn" class="bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-8 rounded-2xl shadow-lg transition duration-200 transform hover:scale-105">
-                    取消
-                </button>
-            </div>
-        </div>
-    </div>
+    <script>
+        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwqlfoRmmsN2wDoq1cFvGVMgM7gD2YkRJNE_mrei0f4bJuQgNvsJlJ3A2uNQz0oxfAYGA/exec";
 
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, limit, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- Firebase 初始化 ---
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = __app_id;
-        const SCORES_COLLECTION = `artifacts/${appId}/public/data/maze_scores`;
-
-        // --- 全域變數宣告 (Variables) ---
-        let isFirebaseReady = false;
         let isAudioContextInitialized = false;
-        
+        let isGoogleLoggedIn = false;
+        let currentUserEmail = "";
         let currentMultiple = 2;
         let currentDifficulty = 'easy';
-        let mazeSize = 5;
-        let mazeData = [];
-        let playerPos = { r: 0, c: 0 };
-        let startPos = { r: 0, c: 0 };
-        let endPos = { r: 0, c: 0 };
-        let pathHistory = [];
-        let isGameActive = false;
-        let hasStarted = false;
-        let isHighlightActive = false;
-        let steps = 0;
-        let timerInterval;
-        let secondsElapsed = 0;
-        let isAiThinking = false;
-
-        // --- 直接對應您的 GitHub 根目錄圖片檔名 ---
-        const ICONS = {
-            monkey: `<img src="monkey.png" alt="猴子">`,
-            banana: `<img src="banana.png" alt="香蕉">`,
-            dino: `<img src="dino.png" alt="恐龍">`,
-            egg: `<img src="egg.png" alt="恐龍蛋">`,
-            astronaut: `<img src="astronaut.png" alt="太空人">`,
-            rocket: `<img src="rocket.png" alt="火箭">`
-        };
-
-        // --- 常數設定 (Constants) ---
-        const RULES = {
-            2: "個位數字是 0、2、4、6、8 的整數。",
-            3: "各個數字和是 3 的倍數的整數。",
-            4: "末兩位數是 4 的倍數的整數。",
-            5: "個位數字是 0 或 5 的整數。",
-            9: "各個數字和是 9 的倍數的整數。",
-            11: "奇數位（第 1, 3, 5, 7 個）數字和與偶數位（第 2, 4, 6, 8 個）數字和的差是 11 的倍數（含 0）。"
-        };
-
-        const RULE_EXAMPLES = {
-            2: '👀 範例：<span class="font-mono text-xl">78<span class="text-red-600 font-black bg-red-100 px-1 rounded">4</span></span>，個位數字是 4，所以 784 是 2 的倍數。',
-            3: '👀 範例：<span class="font-mono text-xl">57</span> → <span class="font-mono bg-blue-50 px-1 rounded">5 + 7 = <span class="text-red-600 font-black">12</span></span>，12 是 3 的倍數，所以 57 是 3 的倍數。',
-            4: '👀 範例：<span class="font-mono text-xl">6<span class="text-red-600 font-black bg-red-100 px-1 rounded">24</span></span>，末兩位數字 24 是 4 的倍數，所以 624 是 4 的倍數。',
-            5: '👀 範例：<span class="font-mono text-xl">13<span class="text-red-600 font-black bg-red-100 px-1 rounded">5</span></span>，個位數字是 5，所以 135 是 5 的倍數。',
-            9: '👀 範例：<span class="font-mono text-xl">729</span> → <span class="font-mono bg-blue-50 px-1 rounded">7 + 2 + 9 = <span class="text-red-600 font-black">18</span></span>，18 是 9 的倍數，所以 729 是 9 的倍數。',
-            11: '<div class="flex"><div class="flex-none">👀&nbsp;</div><div>範例：<span class="font-mono text-xl"><span class="text-red-600 font-black bg-red-100 px-1 rounded">1</span><span class="text-blue-600 font-black bg-blue-100 px-1 rounded mx-0.5">3</span><span class="text-red-600 font-black bg-red-100 px-1 rounded">5</span><span class="text-blue-600 font-black bg-blue-100 px-1 rounded mx-0.5">7</span><span class="text-red-600 font-black bg-red-100 px-1 rounded">4</span></span> → <span class="font-mono">(<span class="text-red-600">1+5+4</span>) - (<span class="text-blue-600">3+7</span>) = 10 - 10 = <span class="font-black">0</span></span>。<br> 0 是 11 的倍數，所以 13574 是 11 的倍數。</div></div>',
-        };
-
+        
         const DIFFICULTY_SETTINGS = {
-            easy: { 
-                size: 5, 
-                cellSize: 'w-16 h-16 text-2xl', 
-                name: '🐵 猴子找香蕉', 
-                themeClass: 'theme-jungle',
-                playerIcon: ICONS.monkey,
-                goalIcon: ICONS.banana,
-                startLabel: '森林入口',
-                endLabel: '美味香蕉',
-                config: {
-                    ranges: [
-                        { min: 0, max: 9, weight: 0.25 },
-                        { min: 10, max: 99, weight: 0.5 },
-                        { min: 100, max: 200, weight: 0.25 }
-                    ]
-                }
-            },
-            medium: { 
-                size: 8, 
-                cellSize: 'w-12 h-12 text-xl', 
-                name: '🦖 恐龍找恐龍蛋', 
-                themeClass: 'theme-ancient',
-                playerIcon: ICONS.dino,
-                goalIcon: ICONS.egg,
-                startLabel: '恐龍媽媽',
-                endLabel: '恐龍蛋',
-                config: {
-                    ranges: [
-                        { min: 10, max: 99, weight: 0.5 },
-                        { min: 100, max: 500, weight: 0.5 }
-                    ]
-                }
-            },
-            hard: { 
-                size: 8, 
-                cellSize: 'w-10 h-10 text-lg md:w-12 md:h-12', 
-                name: '👨‍🚀 太空人找火箭', 
-                themeClass: 'theme-space',
-                playerIcon: ICONS.astronaut, 
-                goalIcon: ICONS.rocket,
-                startLabel: '太空站',
-                endLabel: '發射基地',
-                config: {
-                    ranges: [
-                        { min: 10, max: 99, weight: 0.33 },
-                        { min: 100, max: 999, weight: 0.33 },
-                        { min: 1000, max: 5000, weight: 0.34 }
-                    ]
-                }
-            },
-            overrides: {
-                11: {
-                    medium: {
-                        config: {
-                            ranges: [
-                                { min: 10, max: 99, weight: 0.67 }, 
-                                { min: 100, max: 199, weight: 0.33 } 
-                            ]
-                        }
-                    },
-                    hard: {
-                        config: {
-                            ranges: [
-                                { min: 10, max: 99, weight: 0.5 },
-                                { min: 100, max: 500, weight: 0.5 }
-                            ]
-                        }
-                    }
-                }
-            }
+            easy: { size: 5, name: "簡單 (5x5)", theme: "theme-jungle", startIcon: "monkey", endIcon: "banana", startName: "森林入口", endName: "美味香蕉" },
+            medium: { size: 7, name: "中等 (7x7)", theme: "theme-ancient", startIcon: "dino", endIcon: "egg", startName: "侏儸紀", endName: "神祕恐龍蛋" },
+            hard: { size: 9, name: "挑戰 (9x9)", theme: "theme-space", startIcon: "astronaut", endIcon: "rocket", startName: "太空基地", endName: "宇宙火箭" }
         };
 
-        // --- Auth 邏輯 ---
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        /* 根目錄圖片對應與 emoji 自動備援機制 (onerror fallback) */
+        const ICONS = {
+            monkey: `<img src="monkey.png" alt="猴子" onerror="this.onerror=null;this.parentElement.innerHTML='🐵';">`,
+            banana: `<img src="banana.png" alt="香蕉" onerror="this.onerror=null;this.parentElement.innerHTML='🍌';">`,
+            dino: `<img src="dino.png" alt="恐龍" onerror="this.onerror=null;this.parentElement.innerHTML='🦖';">`,
+            egg: `<img src="egg.png" alt="恐龍蛋" onerror="this.onerror=null;this.parentElement.innerHTML='🥚';">`,
+            astronaut: `<img src="astronaut.png" alt="太空人" onerror="this.onerror=null;this.parentElement.innerHTML='👨‍🚀';">`,
+            rocket: `<img src="rocket.png" alt="火箭" onerror="this.onerror=null;this.parentElement.innerHTML='🚀';">`
+        };
 
-        if (initialAuthToken) {
-             signInWithCustomToken(auth, initialAuthToken)
-                .then(() => {
-                    isFirebaseReady = true;
-                })
-                .catch((error) => {
-                     signInAnonymously(auth).then(() => {
-                         isFirebaseReady = true;
-                     });
-                });
-        } else {
-             signInAnonymously(auth).then(() => {
-                 isFirebaseReady = true;
-             }).catch((error) => {
-                 console.error("Firebase anonymous authentication failed:", error);
-             });
-        }
+        let mazeGrid = [];
+        let playerPos = { r: 0, c: 0 };
+        let endPos = { r: 0, c: 0 };
+        let steps = 0;
+        let secondsElapsed = 0;
+        let timerInterval = null;
+        let isGameActive = false;
+        let isTimerStarted = false;
+        let pendingScoreData = null;
 
-        // --- DOM 元素 ---
         const gameBody = document.getElementById('gameBody');
-        const mazeGrid = document.getElementById('mazeGrid');
+        const mazeContainer = document.getElementById('mazeContainer');
         const difficultySelect = document.getElementById('difficultySelect');
-        const multipleButtons = document.querySelectorAll('.multiple-btn');
-        const newGameBtn = document.getElementById('newGameBtn');
+        const startBtn = document.getElementById('startBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const aiHintBtn = document.getElementById('aiHintBtn');
-        const currentMultipleNumSpan = document.getElementById('currentMultipleNum');
-        const currentRuleTextP = document.getElementById('currentRuleText');
-        const ruleExampleDiv = document.getElementById('ruleExample');
-        const aiHintContainer = document.getElementById('aiHintContainer');
-        const aiHintText = document.getElementById('aiHintText');
-        const gameStatusDiv = document.getElementById('gameStatus');
-        const stepCountDiv = document.getElementById('stepCount');
-        const timerDiv = document.getElementById('timer');
+        const hintBtn = document.getElementById('hintBtn');
+        const ruleDescription = document.getElementById('ruleDescription');
+        const ruleExampleBox = document.getElementById('ruleExampleBox');
+        const timerText = document.getElementById('timerText');
+        const stepsText = document.getElementById('stepsText');
         const winModal = document.getElementById('winModal');
-        const winStatsDiv = document.getElementById('winStats'); 
-        const aiTreasureText = document.getElementById('aiTreasureText');
-        const playAgainBtn = document.getElementById('playAgainBtn');
-        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const finalTime = document.getElementById('finalTime');
+        const finalSteps = document.getElementById('finalSteps');
         const playerNameInput = document.getElementById('playerNameInput');
-        const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
         const leaderboardModal = document.getElementById('leaderboardModal');
+        const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
         const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
-        const leaderboardBody = document.getElementById('leaderboardBody');
-        const noDataMsg = document.getElementById('noDataMsg');
+        const leaderboardContent = document.getElementById('leaderboardContent');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const toast = document.getElementById('toast');
-        const clearLeaderboardBtn = document.getElementById('clearLeaderboardBtn');
-        const confirmClearModal = document.getElementById('confirmClearModal');
-        const confirmClearBtn = document.getElementById('confirmClearBtn');
-        const cancelClearBtn = document.getElementById('cancelClearBtn');
 
-
-        // --- Gemini API 呼叫 ---
-        async function callGemini(promptText) {
-             const apiKey = ""; 
-             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-             const payload = {
-                 contents: [{ parts: [{ text: promptText }] }]
-             };
-
-             try {
-                 const response = await fetch(apiUrl, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify(payload)
-                 });
-
-                 if (!response.ok) {
-                     throw new Error(`API call failed with status: ${response.status}`);
-                 }
-
-                 const data = await response.json();
-                 if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts.length > 0) {
-                     return data.candidates[0].content.parts[0].text;
-                 } else {
-                     throw new Error("Unexpected API response format");
-                 }
-             } catch (error) {
-                 console.error("Gemini API Error:", error);
-                 throw error;
-             }
-        }
-
-        // --- 音效相關函式 ---
-        async function setupAudioContext() { 
+        function setupAudioContext() {
             if (!isAudioContextInitialized) {
-                await Tone.start();
+                if (typeof Tone !== 'undefined' && Tone.start) Tone.start();
                 isAudioContextInitialized = true;
             }
         }
 
-        function playExplosionSound() {
-            setupAudioContext();
-            const noise = new Tone.NoiseSynth({
-                noise: { type: 'brown' },
-                envelope: { attack: 0.005, decay: 0.4, sustain: 0 }
-            }).toDestination();
-            noise.volume.value = -5; 
-            noise.triggerAttackRelease("8n");
-        }
-
-        function playCoinSound() {
-            setupAudioContext();
-            const synth = new Tone.Synth({
-                oscillator: { type: "square" }, 
-                envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
-            }).toDestination();
-            synth.volume.value = -10; 
-            const now = Tone.now();
-            synth.triggerAttackRelease("B5", "16n", now);
-            synth.triggerAttackRelease("E6", "8n", now + 0.05); 
+        function playStepSound() {
+            try {
+                if (typeof Tone !== 'undefined') {
+                    const synth = new Tone.Synth().toDestination();
+                    synth.triggerAttackRelease("C5", "32n");
+                }
+            } catch (e) {}
         }
 
         function playWinSound() {
-            setupAudioContext();
-            const synth = new Tone.Synth().toDestination();
-            synth.volume.value = -10;
-            const now = Tone.now();
-            synth.triggerAttackRelease("G4", "8n", now);
-            synth.triggerAttackRelease("C5", "8n", now + 0.1);
-            synth.triggerAttackRelease("E5", "8n", now + 0.2);
-            synth.triggerAttackRelease("G5", "4n", now + 0.3);
-        }
-
-        function triggerExplosion(r, c) {
-            const cell = document.querySelector(`.maze-cell[data-r="${r}"][data-c="${c}"]`);
-            if (!cell) return;
-            playExplosionSound();
-            const bomb = document.createElement('div');
-            bomb.innerText = '💣';
-            bomb.className = 'bomb-effect';
-            cell.appendChild(bomb);
-            setTimeout(() => { bomb.remove(); }, 600);
-        }
-
-        // --- AI 功能實作 ---
-        async function getAIHint() {
-            if (!isGameActive || isAiThinking) return;
-            
-            isAiThinking = true;
-            aiHintBtn.disabled = true;
-            aiHintBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            aiHintContainer.classList.remove('hidden');
-            aiHintText.innerHTML = '<span class="animate-pulse">小幫手正在觀察地圖……</span>';
-
-            const r = playerPos.r;
-            const c = playerPos.c;
-            const surroundings = {};
-            let targetNumber = null;
-
-            const deltas = [{dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1}];
-            for (let d of deltas) {
-                const nr = r + d.dr;
-                const nc = c + d.dc;
-                if (nr >= 0 && nr < mazeSize && nc >= 0 && nc < mazeSize) {
-                    const num = mazeData[nr][nc];
-                    if (num % currentMultiple === 0) {
-                        targetNumber = num;
-                    }
-                    const key = d.dr === -1 ? 'up' : (d.dr === 1 ? 'down' : (d.dc === -1 ? 'left' : 'right'));
-                    surroundings[key] = num;
+            try {
+                if (typeof Tone !== 'undefined') {
+                    const synth = new Tone.Synth().toDestination();
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C4", "8n", now);
+                    synth.triggerAttackRelease("E4", "8n", now + 0.1);
+                    synth.triggerAttackRelease("G4", "8n", now + 0.2);
+                    synth.triggerAttackRelease("C5", "4n", now + 0.3);
                 }
-            }
-            
-            let prompt = `你是一個倍數迷宮遊戲中的小幫手。
-            對象：**小學五年級學生**。
-            目標倍數：${currentMultiple}。
-            玩家位置數字：${mazeData[r][c]}。
-            周圍數字：${JSON.stringify(surroundings)}。`;
-
-            if (targetNumber !== null) {
-                prompt += `
-                正確的下一步數字是：**${targetNumber}**。
-                請根據這個正確數字，給玩家一個「關於判別規則」的提示。
-                **重要規則：**
-                1. **絕對不要**直接告訴玩家是哪個數字。
-                2. **絕對不要**告訴玩家往「上下左右」哪個方向走。
-                3. **只能**提示「判別的方法」或「計算的動作」。
-                4. 請用繁體中文，語氣活潑親切，30字以內。`;
-            } else {
-                prompt += `周圍似乎沒有正確的倍數。請建議玩家退回一步看看！`;
-            }
-
-            try {
-                const hint = await callGemini(prompt);
-                aiHintText.textContent = hint;
-            } catch (error) {
-                aiHintText.textContent = "小幫手暫時去休息了，請稍後再試！";
-            } finally {
-                isAiThinking = false;
-                aiHintBtn.disabled = false;
-                aiHintBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            } catch (e) {}
         }
 
-        async function generateTreasureDescription() {
-            aiTreasureText.innerHTML = '<span class="animate-pulse">正在鑑定中……</span>';
-            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-            const prompt = `玩家剛剛完成了一個數學尋寶迷宮。
-            主題：${setting.name}。尋找的倍數：${currentMultiple}。花費時間：${Math.floor(secondsElapsed / 60)}分${secondsElapsed % 60}秒。
-            請發揮創意，生成一個他們在終點找到的寶藏描述。
-            規則：對象是國小六年級學生，寶藏名稱要簡單帥氣，總長度 50 字以內，不要用 ** 符號。`;
-
+        function playErrorSound() {
             try {
-                let description = await callGemini(prompt);
-                description = description.replace(/\*\*/g, '').replace(/\n/g, '<br>');
-                aiTreasureText.innerHTML = description;
-            } catch (error) {
-                aiTreasureText.textContent = "這件寶物太過神秘，連鑑定師都無法辨識！（你太幸運了！）";
-            }
+                if (typeof Tone !== 'undefined') {
+                    const synth = new Tone.Synth().toDestination();
+                    synth.triggerAttackRelease("F2", "8n");
+                }
+            } catch (e) {}
         }
 
-        // --- 遊戲邏輯 ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
 
         function setMultiple(mult) {
             currentMultiple = mult;
-            multipleButtons.forEach(btn => {
-                if (parseInt(btn.dataset.multiple) === currentMultiple) {
-                    btn.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
-                    btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-500');
+            document.querySelectorAll('#multipleButtons button').forEach(btn => {
+                if (Number(btn.dataset.mult) === mult) {
+                    btn.className = "flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-blue-600 text-white shadow-md";
                 } else {
-                    btn.classList.remove('bg-blue-600', 'text-white', 'hover:bg-blue-500');
-                    btn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                    btn.className = "flex-1 min-w-[45px] py-2.5 rounded-xl font-black text-sm transition bg-slate-100 hover:bg-slate-200 text-slate-700";
                 }
             });
-            currentMultipleNumSpan.textContent = currentMultiple;
-            currentRuleTextP.textContent = RULES[currentMultiple];
-            ruleExampleDiv.innerHTML = RULE_EXAMPLES[currentMultiple];
+            updateRuleDescription();
+            if (isGameActive) startNewGame();
         }
 
-        function applyTheme() {
-            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-            gameBody.classList.remove('theme-jungle', 'theme-ancient', 'theme-space');
-            gameBody.classList.add(setting.themeClass);
+        function updateRuleDescription() {
+            let desc = "";
+            let exampleText = "";
+
+            if (currentMultiple === 2) {
+                desc = "個位數字是 0、2、4、6、8 的整數。";
+                exampleText = `範例：78<span class="bg-rose-100 text-rose-600 px-1 rounded">4</span>，個位數字是 4，所以 784 是 2 的倍數。`;
+            } else if (currentMultiple === 3) {
+                desc = "所有位數數字相加起來的總和是 3 的倍數。";
+                exampleText = `範例：123 (1+2+3 = 6)，6 是 3 的倍數，所以 123 是 3 的倍數。`;
+            } else if (currentMultiple === 4) {
+                desc = "末兩位數組成的數字是 4 的倍數。";
+                exampleText = `範例：5<strong>24</strong>，末兩位 24 是 4 的倍數，所以 524 是 4 的倍數。`;
+            } else if (currentMultiple === 5) {
+                desc = "個位數字是 0 或 5 的整數。";
+                exampleText = `範例：34<span class="bg-rose-100 text-rose-600 px-1 rounded">5</span>，個位數字是 5，所以 345 是 5 的倍數。`;
+            } else if (currentMultiple === 9) {
+                desc = "所有位數數字相加起來的總和是 9 的倍數。";
+                exampleText = `範例：729 (7+2+9 = 18)，18 是 9 的倍數，所以 729 是 9 的倍數。`;
+            } else if (currentMultiple === 11) {
+                desc = "奇數位數和與偶數位數和的差（大減小）是 11 的倍數。";
+                exampleText = `範例：121 ((1+1) - 2 = 0)，0 是 11 的倍數，所以 121 是 11 的倍數。`;
+            }
+
+            ruleDescription.innerHTML = `${currentMultiple} 的倍數判別法<br><span class="text-xs text-slate-200 font-normal">${desc}</span>`;
+            ruleExampleBox.innerHTML = `範例：${exampleText}`;
         }
 
-        function startGameLogic() {
-            if (hasStarted) return;
-            hasStarted = true;
-            isHighlightActive = true;
-            startTimer();
-            gameStatusDiv.textContent = `出發吧探險家！請點擊起點開始冒險`;
-            updatePathVisuals(); 
+        function isMultiple(num) {
+            return num > 0 && num % currentMultiple === 0;
         }
 
         function startNewGame() {
-            applyTheme();
+            setupAudioContext();
+            currentDifficulty = difficultySelect.value;
             const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-            mazeSize = setting.size;
             
-            generateMaze();
-            resetGameState();
-            renderMaze();
-            updatePathVisuals();
-            isGameActive = true;
-            gameStatusDiv.textContent = `出發吧探險家！請點擊起點開始冒險`; 
-            gameStatusDiv.className = 'text-xl font-bold text-white drop-shadow';
-            winModal.classList.add('hidden');
-            aiHintContainer.classList.add('hidden');
+            gameBody.className = `font-sans flex flex-col min-h-screen transition-colors duration-500 ${setting.theme}`;
             
-            const lastName = localStorage.getItem('lastPlayerName');
-            if (lastName) {
-                playerNameInput.value = lastName;
+            const size = setting.size;
+            mazeGrid = [];
+            
+            let pathCells = [{r: 0, c: 0}];
+            let r = 0, c = 0;
+            while (r < size - 1 || c < size - 1) {
+                if (r === size - 1) c++;
+                else if (c === size - 1) r++;
+                else {
+                    if (Math.random() < 0.5) r++;
+                    else c++;
+                }
+                pathCells.push({r, c});
             }
-        }
 
-        function resetCurrentGame() {
-            if (mazeData.length === 0) return;
-            resetGameState();
-            renderMaze();
-            updatePathVisuals();
-            isGameActive = true;
-            gameStatusDiv.textContent = `重新開始新的冒險篇章！`;
-            gameStatusDiv.className = 'text-xl font-bold text-white drop-shadow';
-            aiHintContainer.classList.add('hidden');
-        }
+            endPos = { r: size - 1, c: size - 1 };
 
-        function resetGameState() {
-            playerPos = { ...startPos };
-            pathHistory = [{ ...startPos }];
-            steps = 0;
-            secondsElapsed = 0;
-            isHighlightActive = false; 
-            hasStarted = false; 
-            updateStats();
-            stopTimer();
-        }
-
-        function startTimer() {
-            stopTimer();
-            timerInterval = setInterval(() => {
-                secondsElapsed++;
-                updateStats();
-            }, 1000);
-        }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-        }
-
-        function updateStats() {
-            stepCountDiv.textContent = `步數： ${steps}`;
-            const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
-            const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
-            timerDiv.textContent = `時間： ${minutes}：${seconds}`;
-        }
-
-        function generateMaze() {
-            let setting = DIFFICULTY_SETTINGS[currentDifficulty];
-            let config = setting.config;
-
-            if (currentMultiple === 11 && DIFFICULTY_SETTINGS.overrides && DIFFICULTY_SETTINGS.overrides[11]) {
-                if (DIFFICULTY_SETTINGS.overrides[11][currentDifficulty]) {
-                    config = DIFFICULTY_SETTINGS.overrides[11][currentDifficulty].config;
+            for (let i = 0; i < size; i++) {
+                mazeGrid[i] = [];
+                for (let j = 0; j < size; j++) {
+                    mazeGrid[i][j] = { val: 0, isCorrectPath: false };
                 }
             }
 
-            mazeData = Array.from({ length: mazeSize }, () => Array(mazeSize).fill(0));
-            const usedNumbers = new Set(); 
-            startPos = { r: 0, c: 0 };
-            endPos = { r: mazeSize - 1, c: mazeSize - 1 };
-            
-            let path = [];
-            let curr = { ...startPos };
-            path.push({ ...curr });
-            const visited = new Set([`${curr.r},${curr.c}`]);
+            pathCells.forEach(pos => {
+                mazeGrid[pos.r][pos.c].isCorrectPath = true;
+            });
 
-            while (curr.r !== endPos.r || curr.c !== endPos.c) {
-                const neighbors = [];
-                if (curr.r + 1 < mazeSize) neighbors.push({ r: curr.r + 1, c: curr.c });
-                if (curr.c + 1 < mazeSize) neighbors.push({ r: curr.r, c: curr.c + 1 });
-                if (curr.r > 0 && Math.random() > 0.8) neighbors.push({ r: curr.r - 1, c: curr.c });
-                if (curr.c > 0 && Math.random() > 0.8) neighbors.push({ r: curr.r, c: curr.c - 1 });
-
-                let validNeighbors = neighbors.filter(n => !visited.has(`${n.r},${n.c}`));
-
-                if (validNeighbors.length === 0) {
-                     validNeighbors = neighbors.filter(n => n.r >= curr.r && n.c >= curr.c);
-                     if (validNeighbors.length === 0 && (curr.r < mazeSize - 1 || curr.c < mazeSize - 1)) {
-                         if (curr.r < mazeSize - 1) curr.r++;
-                         else curr.c++;
-                         visited.add(`${curr.r},${curr.c}`);
-                         path.push({...curr});
-                         continue;
-                     }
-                }
-
-                if (validNeighbors.length > 0) {
-                    validNeighbors.sort((a, b) => (Math.abs(endPos.r - a.r) + Math.abs(endPos.c - a.c)) - (Math.abs(endPos.r - b.r) + Math.abs(endPos.c - b.c)));
-                    let nextIndex = 0;
-                    if (Math.random() > 0.3 && validNeighbors.length > 1) nextIndex = 1;
-                    curr = validNeighbors[Math.min(nextIndex, validNeighbors.length - 1)];
-                } else {
-                     curr = {...endPos};
-                }
-                visited.add(`${curr.r},${curr.c}`);
-                path.push({ ...curr });
-            }
-
-            let zeroPathIndex = -1;
-            if (path.length > 2) {
-                zeroPathIndex = Math.floor(Math.random() * (path.length - 2)) + 1; 
-            }
-
-            for (let r = 0; r < mazeSize; r++) {
-                for (let c = 0; c < mazeSize; c++) {
-                    const isPath = path.some((p, idx) => p.r === r && p.c === c);
-                    const isZeroSpot = path.some((p, idx) => p.r === r && p.c === c && idx === zeroPathIndex);
-
-                    let num;
-                    let attempts = 0;
-                    do {
-                        if (isZeroSpot) {
-                            num = 0;
-                        } else if ((r === startPos.r && c === startPos.c) || (r === endPos.r && c === endPos.c) || isPath) {
-                            num = generateNumberWithConfig(config, currentMultiple, true, usedNumbers);
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if ((i === 0 && j === 0) || (i === size - 1 && j === size - 1)) continue;
+                    
+                    if (mazeGrid[i][j].isCorrectPath) {
+                        let factor = Math.floor(Math.random() * 8) + 2;
+                        mazeGrid[i][j].val = currentMultiple * factor;
+                    } else {
+                        if (Math.random() < 0.4) {
+                            mazeGrid[i][j].val = currentMultiple * (Math.floor(Math.random() * 8) + 1);
                         } else {
-                            num = Math.random() > 0.3 ? 
-                                  generateNumberWithConfig(config, currentMultiple, false, usedNumbers) : 
-                                  generateNumberWithConfig(config, currentMultiple, true, usedNumbers);
+                            let nonMult;
+                            do {
+                                nonMult = Math.floor(Math.random() * 90) + 10;
+                            } while (nonMult % currentMultiple === 0);
+                            mazeGrid[i][j].val = nonMult;
                         }
-                        attempts++;
-                    } while (usedNumbers.has(num) && attempts < 100); 
-
-                    mazeData[r][c] = num;
-                    usedNumbers.add(num);
+                    }
                 }
             }
+
+            mazeGrid[0][0].val = currentMultiple * (Math.floor(Math.random() * 5) + 1);
+            mazeGrid[size - 1][size - 1].val = currentMultiple * (Math.floor(Math.random() * 5) + 1);
+
+            playerPos = { r: 0, c: 0 };
+            steps = 0;
+            stepsText.textContent = steps;
+            
+            clearInterval(timerInterval);
+            secondsElapsed = 0;
+            timerText.textContent = "00:00";
+            isTimerStarted = false;
+
+            isGameActive = true;
+            updateRuleDescription();
+            renderMaze();
         }
 
-        function generateNumberWithConfig(config, base, needMultiple, usedNumbers) {
-            let attempts = 0;
-            const maxAttempts = 50; 
+        function getValidNextMoves() {
+            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
+            const size = setting.size;
+            const dirs = [{r:-1, c:0}, {r:1, c:0}, {r:0, c:-1}, {r:0, c:1}];
+            let validMoves = [];
 
-            while (attempts < maxAttempts) {
-                attempts++;
-                const rand = Math.random();
-                let selectedRange = config.ranges[0];
-                let cumulativeWeight = 0;
-                for (const range of config.ranges) {
-                    cumulativeWeight += range.weight;
-                    if (rand <= cumulativeWeight) {
-                        selectedRange = range;
-                        break;
-                    }
-                }
-
-                let candidate;
-                if (needMultiple) {
-                    let minFactor = Math.ceil(selectedRange.min / base);
-                    if (minFactor === 0) minFactor = 1;
-                    let minMultiple = minFactor * base; 
-                    let maxFactor = Math.floor(selectedRange.max / base);
-                    let maxMultiple = maxFactor * base;
-
-                    if (maxMultiple < selectedRange.min || minMultiple > selectedRange.max || maxFactor < minFactor) {
-                        continue; 
-                    }
-
-                    if (minMultiple < selectedRange.min) minFactor += 1;
-                    if (minFactor > maxFactor) continue;
-
-                    const randomFactor = Math.floor(Math.random() * (maxFactor - minFactor + 1)) + minFactor;
-                    candidate = randomFactor * base;
-                } else {
-                    candidate = Math.floor(Math.random() * (selectedRange.max - selectedRange.min + 1)) + selectedRange.min;
-                    if (candidate % base === 0 && candidate !== 0) continue;
-                }
-
-                if (candidate >= selectedRange.min && candidate <= selectedRange.max && !usedNumbers.has(candidate)) {
-                    return candidate;
+            for (let d of dirs) {
+                let nr = playerPos.r + d.r;
+                let nc = playerPos.c + d.c;
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                    validMoves.push({ r: nr, c: nc });
                 }
             }
-            
-            if (needMultiple) {
-                let fallback = base * (Math.floor(Math.random() * 10) + 1);
-                while(usedNumbers.has(fallback)) fallback += base;
-                return fallback;
-            } else {
-                let fallback = Math.floor(Math.random() * 100) + 1;
-                while(usedNumbers.has(fallback) || (fallback % base === 0 && fallback !== 0)) fallback++;
-                return fallback;
-            }
+            return validMoves;
         }
 
         function renderMaze() {
-            mazeGrid.innerHTML = '';
-            mazeGrid.style.gridTemplateColumns = `repeat(${mazeSize}, minmax(0, 1fr))`;
             const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-            const cellClass = setting.cellSize;
+            const size = setting.size;
+            mazeContainer.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+            
+            const validMoves = isGameActive ? getValidNextMoves() : [];
 
-            for (let r = 0; r < mazeSize; r++) {
-                for (let c = 0; c < mazeSize; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = `maze-cell ${cellClass} text-slate-700`;
+            let html = '';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const isPlayer = (playerPos.r === i && playerPos.c === j);
+                    const isStart = (i === 0 && j === 0);
+                    const isEnd = (i === size - 1 && j === size - 1);
+                    const isValidMove = validMoves.some(m => m.r === i && m.c === j);
                     
-                    const numSpan = document.createElement('span');
-                    numSpan.textContent = mazeData[r][c];
-                    cell.appendChild(numSpan);
+                    let cellClass = "maze-cell";
+                    if (isStart) cellClass += " start-cell";
+                    if (isEnd) cellClass += " end-cell";
+                    if (isValidMove) cellClass += " highlight-move";
 
-                    cell.dataset.r = r;
-                    cell.dataset.c = c;
-
-                    if (r === startPos.r && c === startPos.c) {
-                        cell.classList.add('start-cell');
-                        cell.classList.add('hide-number');
-                        cell.title = setting.startLabel;
-                        
-                        const icon = document.createElement('div');
-                        icon.className = 'icon-marker';
-                        icon.innerHTML = setting.playerIcon;
-                        cell.appendChild(icon);
-
-                        const label = document.createElement('div');
-                        label.className = 'label-text text-emerald-800';
-                        label.textContent = setting.startLabel;
-                        cell.appendChild(label);
-                        
-                    } else if (r === endPos.r && c === endPos.c) {
-                        cell.classList.add('end-cell');
-                        cell.classList.add('hide-number');
-                        cell.title = setting.endLabel;
-                        
-                        const icon = document.createElement('div');
-                        icon.className = 'icon-marker';
-                        icon.innerHTML = setting.goalIcon;
-                        cell.appendChild(icon);
-                        
-                        const label = document.createElement('div');
-                        label.className = 'label-text text-rose-800';
-                        label.textContent = setting.endLabel;
-                        cell.appendChild(label);
+                    let innerContent = `<span>${mazeGrid[i][j].val}</span>`;
+                    
+                    if (isStart) {
+                        innerContent += `<div class="icon-marker">${ICONS[setting.startIcon]}</div>`;
+                        if (!isPlayer) innerContent += `<span class="label-text">${setting.startName}</span>`;
+                    }
+                    if (isEnd) {
+                        innerContent += `<div class="icon-marker">${ICONS[setting.endIcon]}</div>`;
+                        if (!isPlayer) innerContent += `<span class="label-text">${setting.endName}</span>`;
+                    }
+                    if (isPlayer) {
+                        innerContent += `<div class="player-ring"></div>`;
+                        innerContent += `<div class="icon-marker animate-bounce">${ICONS[setting.startIcon]}</div>`;
                     }
 
-                    cell.addEventListener('click', () => handleCellClick(r, c));
-                    mazeGrid.appendChild(cell);
+                    html += `<div class="${cellClass}" onclick="handleCellClick(${i}, ${j})">${innerContent}</div>`;
                 }
             }
+            mazeContainer.innerHTML = html;
         }
 
         function handleCellClick(r, c) {
             if (!isGameActive) return;
 
-            if (r === playerPos.r && c === playerPos.c) {
-                if (!hasStarted) startGameLogic();
-                return;
-            }
-
-            const dr = Math.abs(r - playerPos.r);
-            const dc = Math.abs(c - playerPos.c);
-            if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
-                tryMove(r, c);
-            }
-        }
-
-        function handleKeyPress(e) {
-            if (!isGameActive) return;
-            if (!hasStarted) startGameLogic();
-
-            let newR = playerPos.r;
-            let newC = playerPos.c;
-
-            switch (e.key) {
-                case 'ArrowUp': case 'w': case 'W': newR--; e.preventDefault(); break;
-                case 'ArrowDown': case 's': case 'S': newR++; e.preventDefault(); break;
-                case 'ArrowLeft': case 'a': case 'A': newC--; e.preventDefault(); break;
-                case 'ArrowRight': case 'd': case 'D': newC++; e.preventDefault(); break;
-                default: return;
-            }
-
-            if (newR >= 0 && newR < mazeSize && newC >= 0 && newC < mazeSize) {
-                tryMove(newR, newC);
-            }
-        }
-
-        function tryMove(r, c) {
-            if (pathHistory.length > 1) {
-                const prevPos = pathHistory[pathHistory.length - 2];
-                if (prevPos.r === r && prevPos.c === c) {
-                    pathHistory.pop();
-                    playerPos = { r, c };
-                    steps++;
-                    updateStats();
-                    updatePathVisuals();
-                    gameStatusDiv.textContent = '退回一步';
-                    gameStatusDiv.className = 'text-xl font-bold text-amber-300 drop-shadow';
-                    aiHintContainer.classList.add('hidden');
-                    return;
-                }
-            }
-
-            if (!hasStarted) startGameLogic();
-
-            const targetNum = mazeData[r][c];
-            if (targetNum % currentMultiple === 0) {
-                if (r !== endPos.r || c !== endPos.c) {
-                    playCoinSound();
-                }
-                
-                pathHistory.push({ r, c });
-                playerPos = { r, c };
-                steps++;
-                updateStats();
-                updatePathVisuals();
-                aiHintContainer.classList.add('hidden');
-
-                if (r === endPos.r && c === endPos.c) {
-                    gameWin();
-                } else {
-                     gameStatusDiv.textContent = '好棒 👍 請繼續前進！';
-                     gameStatusDiv.className = 'text-xl font-bold text-emerald-300 drop-shadow';
-                }
-            } else {
-                gameStatusDiv.textContent = `哎呀！${targetNum} 不是 ${currentMultiple} 的倍數！`;
-                gameStatusDiv.className = 'text-xl font-bold text-rose-300 shake drop-shadow';
-                triggerExplosion(r, c);
-                setTimeout(() => {
-                     gameStatusDiv.classList.remove('shake');
-                     if (isGameActive) {
-                          gameStatusDiv.textContent = '請退回去並試試其它路線～';
-                          gameStatusDiv.className = 'text-xl font-bold text-amber-300 drop-shadow';
-                     }
+            if (!isTimerStarted) {
+                isTimerStarted = true;
+                timerInterval = setInterval(() => {
+                    secondsElapsed++;
+                    const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                    const s = (secondsElapsed % 60).toString().padStart(2, '0');
+                    timerText.textContent = `${m}:${s}`;
                 }, 1000);
             }
-        }
 
-        function updatePathVisuals() {
-            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
+            const dr = Math.abs(playerPos.r - r);
+            const dc = Math.abs(playerPos.c - c);
+            const isAdjacent = (dr + dc === 1);
 
-            document.querySelectorAll('.maze-cell').forEach(cell => {
-                cell.classList.remove('path', 'highlight-move');
-                const oldIcon = cell.querySelector('.player-icon');
-                if (oldIcon) oldIcon.remove();
-                const oldRing = cell.querySelector('.player-ring');
-                if (oldRing) oldRing.remove();
-                
-                if (!cell.classList.contains('end-cell') && !cell.classList.contains('start-cell')) {
-                     cell.classList.remove('hide-number');
+            if (!isAdjacent) {
+                if (!(playerPos.r === r && playerPos.c === c)) {
+                    showToast("只能移動到相鄰的上下左右格子喔！", true);
                 }
-            });
-
-            pathHistory.forEach((pos, index) => {
-                const cell = document.querySelector(`.maze-cell[data-r="${pos.r}"][data-c="${pos.c}"]`);
-                if (cell) {
-                    if (index === pathHistory.length - 1) {
-                        const icon = document.createElement('div');
-                        icon.className = 'icon-marker player-icon';
-                        icon.innerHTML = setting.playerIcon;
-                        cell.appendChild(icon);
-                        
-                        const ring = document.createElement('div');
-                        ring.className = 'player-ring';
-                        cell.appendChild(ring);
-
-                        cell.classList.add('hide-number');
-                    } else {
-                        cell.classList.add('path');
-                    }
-                }
-            });
-
-            if (isGameActive && isHighlightActive) {
-                const r = playerPos.r;
-                const c = playerPos.c;
-                const deltas = [{dr: -1, dc: 0}, {dr: 1, dc: 0}, {dr: 0, dc: -1}, {dr: 0, dc: 1}];
-                
-                deltas.forEach(d => {
-                    const nr = r + d.dr;
-                    const nc = c + d.dc;
-                    if (nr >= 0 && nr < mazeSize && nc >= 0 && nc < mazeSize) {
-                        const isVisited = pathHistory.some(pos => pos.r === nr && pos.c === nc);
-                        if (!isVisited) {
-                             const cell = document.querySelector(`.maze-cell[data-r="${nr}"][data-c="${nc}"]`);
-                             if (cell) cell.classList.add('highlight-move');
-                        }
-                    }
-                });
-            }
-        }
-
-        function gameWin() {
-            isGameActive = false;
-            stopTimer();
-            playWinSound();
-            
-            gameStatusDiv.textContent = '任務完成！';
-            gameStatusDiv.className = 'text-xl font-bold text-emerald-300 drop-shadow';
-
-            const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
-            const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
-            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-
-            winStatsDiv.innerHTML = `<div class="grid grid-cols-2 gap-4 text-left text-lg">
-                <div class="whitespace-nowrap"><span class="font-bold">【任務】</span>${setting.name}</div>
-                <div class="whitespace-nowrap"><span class="font-bold">【目標】</span>${currentMultiple} 的倍數</div>
-                <div class="whitespace-nowrap"><span class="font-bold">【時間】</span>${minutes}：${seconds}</div>
-                <div class="whitespace-nowrap"><span class="font-bold">【步數】</span>${steps}</div>
-            </div>`;
-            
-            generateTreasureDescription();
-            winModal.classList.remove('hidden');
-            setTimeout(() => playerNameInput.focus(), 100);
-        }
-
-        async function fetchAndShowLeaderboard() {
-            if (!isFirebaseReady) {
-                alert("資料庫尚未連線，無法讀取紀錄。");
                 return;
             }
-            leaderboardModal.classList.remove('hidden');
-            loadingOverlay.classList.remove('hidden');
-            leaderboardBody.innerHTML = '';
-            noDataMsg.classList.add('hidden');
 
-            try {
-                const q = query(collection(db, SCORES_COLLECTION), limit(100));
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    noDataMsg.classList.remove('hidden');
-                } else {
-                    const scores = [];
-                    querySnapshot.forEach((doc) => { scores.push(doc.data()); });
-                    scores.sort((a, b) => {
-                        const timeA = a.timestamp ? a.timestamp.seconds : 0;
-                        const timeB = b.timestamp ? b.timestamp.seconds : 0;
-                        return timeB - timeA;
-                    });
-
-                    scores.forEach((data) => {
-                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date();
-                        const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                        
-                        let difficultyText = data.difficulty;
-                        if (data.difficultyKey === 'easy') difficultyText = '簡單';
-                        else if (data.difficultyKey === 'medium') difficultyText = '中等';
-                        else if (data.difficultyKey === 'hard') difficultyText = '挑戰';
-
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm whitespace-nowrap">${dateStr}</td>
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm font-bold text-blue-600 whitespace-nowrap">${data.playerName}</td>
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm whitespace-nowrap">${difficultyText}</td>
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm whitespace-nowrap">${data.multiple}</td>
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm whitespace-nowrap">${data.steps}</td>
-                            <td class="px-5 py-2 border-b border-slate-200 bg-white text-sm whitespace-nowrap">${data.timeSeconds}s</td>
-                        `;
-                        leaderboardBody.appendChild(row);
-                    });
-                }
-            } catch (e) {
-                console.error("Error fetching leaderboard: ", e);
-                leaderboardBody.innerHTML = `<tr><td colspan="6" class="px-5 py-4 text-center text-rose-500">讀取失敗 (${e.message})，請稍後再試。</td></tr>`;
-            } finally {
-                loadingOverlay.classList.add('hidden');
-            }
-        }
-        
-        async function handleClearRecords() {
-            loadingOverlay.classList.remove('hidden');
-            confirmClearModal.classList.add('hidden');
-            if (!isFirebaseReady) {
-                showToast("資料庫未連線，無法刪除。", true);
-                loadingOverlay.classList.add('hidden');
+            const targetVal = mazeGrid[r][c].val;
+            if (!isMultiple(targetVal)) {
+                playErrorSound();
+                showToast(`${targetVal} 不是 ${currentMultiple} 的倍數，不能走這裡！`, true);
                 return;
             }
-            try {
-                const querySnapshot = await getDocs(collection(db, SCORES_COLLECTION));
-                if (!querySnapshot.empty) {
-                    const deletePromises = [];
-                    querySnapshot.forEach((docRefDoc) => { deletePromises.push(deleteDoc(docRefDoc.ref)); });
-                    await Promise.all(deletePromises);
-                    showToast("所有紀錄已成功清除！", false);
-                } else {
-                    showToast("紀錄本來就是空的！", false);
-                }
-            } catch (e) {
-                showToast(`清除失敗: ${e.message}`, true);
-            } finally {
-                loadingOverlay.classList.add('hidden');
-                fetchAndShowLeaderboard(); 
+
+            playStepSound();
+            playerPos = { r, c };
+            steps++;
+            stepsText.textContent = steps;
+            renderMaze();
+
+            if (playerPos.r === endPos.r && playerPos.c === endPos.c) {
+                isGameActive = false;
+                clearInterval(timerInterval);
+                playWinSound();
+
+                const minutes = Math.floor(secondsElapsed / 60);
+                const seconds = secondsElapsed % 60;
+                finalTime.textContent = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                finalSteps.textContent = `${steps}步`;
+                
+                const lastPlayer = localStorage.getItem('lastPlayerName') || '';
+                playerNameInput.value = lastPlayer;
+                winModal.classList.remove('hidden');
             }
         }
 
-        function showToast(message, isError = false) {
-            toast.textContent = message;
-            toast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
-        }
+        startBtn.addEventListener('click', startNewGame);
+        resetBtn.addEventListener('click', startNewGame);
+        difficultySelect.addEventListener('change', startNewGame);
 
-        // --- 初始化事件 ---
-        difficultySelect.addEventListener('change', (e) => {
-            currentDifficulty = e.target.value;
-            startNewGame();
+        hintBtn.addEventListener('click', () => {
+            if (!isGameActive) return;
+            showToast("黃色發光的相鄰格子都可以點擊測試喔！");
         });
-
-        multipleButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setMultiple(parseInt(btn.dataset.multiple));
-                startNewGame();
-            });
-        });
-
-        newGameBtn.addEventListener('click', startNewGame);
-        resetBtn.addEventListener('click', resetCurrentGame);
-        aiHintBtn.addEventListener('click', getAIHint);
 
         playAgainBtn.addEventListener('click', () => {
             winModal.classList.add('hidden');
             startNewGame();
         });
 
-        submitScoreBtn.addEventListener('click', async () => {
+        submitScoreBtn.addEventListener('click', () => {
             const playerName = playerNameInput.value.trim();
             if (!playerName) {
                 alert("請輸入名字才能儲存紀錄喔！");
                 return;
             }
-            if (!isFirebaseReady) {
-                alert("資料庫尚未連線，請稍後再試。");
+
+            if (!isGoogleLoggedIn) {
+                showToast("訪客模式不計入排行榜成績！", true);
+                winModal.classList.add('hidden');
+                startNewGame();
                 return;
             }
 
+            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
+            const date = new Date();
+            const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+            pendingScoreData = {
+                dateStr: dateStr,
+                playerName: playerName,
+                difficulty: setting.name,
+                difficultyKey: currentDifficulty,
+                multiple: currentMultiple,
+                steps: steps,
+                timeSeconds: secondsElapsed,
+                email: currentUserEmail || "Google 用戶"
+            };
+
+            localStorage.setItem('lastPlayerName', playerName);
+            winModal.classList.add('hidden');
+            uploadScoreToCloud();
+        });
+
+        const initialLoginModal = document.getElementById('initialLoginModal');
+        const startGoogleLoginBtn = document.getElementById('startGoogleLoginBtn');
+        const startGuestLoginBtn = document.getElementById('startGuestLoginBtn');
+        const googleLoginModal = document.getElementById('googleLoginModal');
+        const loginEmailInput = document.getElementById('loginEmailInput');
+        const confirmLoginBtn = document.getElementById('confirmLoginBtn');
+        const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+
+        startGuestLoginBtn.addEventListener('click', () => {
+            isGoogleLoggedIn = false;
+            initialLoginModal.classList.add('hidden');
+            setMultiple(2);
+            startNewGame();
+        });
+
+        startGoogleLoginBtn.addEventListener('click', () => {
+            initialLoginModal.classList.add('hidden');
+            googleLoginModal.classList.remove('hidden');
+            setTimeout(() => loginEmailInput.focus(), 100);
+        });
+
+        cancelLoginBtn.addEventListener('click', () => {
+            googleLoginModal.classList.add('hidden');
+            initialLoginModal.classList.remove('hidden');
+        });
+
+        confirmLoginBtn.addEventListener('click', () => {
+            const email = loginEmailInput.value.trim();
+            if (!email) {
+                alert("請輸入電子郵件以完成 Google 驗證！");
+                return;
+            }
+            currentUserEmail = email;
+            isGoogleLoggedIn = true;
+            googleLoginModal.classList.add('hidden');
+            setMultiple(2);
+            startNewGame();
+        });
+
+        async function uploadScoreToCloud() {
             loadingOverlay.classList.remove('hidden');
-            try {
-                await addDoc(collection(db, SCORES_COLLECTION), {
-                    playerName: playerName,
-                    difficulty: DIFFICULTY_SETTINGS[currentDifficulty].name,
-                    difficultyKey: currentDifficulty,
-                    multiple: currentMultiple,
-                    steps: steps,
-                    timeSeconds: secondsElapsed,
-                    timestamp: Timestamp.now()
-                });
-                localStorage.setItem('lastPlayerName', playerName);
-                winModal.classList.add('hidden');
-                showToast("冒險紀錄儲存成功"); 
-                startNewGame();
-            } catch (e) {
-                alert("儲存失敗，請檢查網路連線。");
-            } finally {
+            if (pendingScoreData) {
+                try {
+                    await fetch(GOOGLE_SHEET_API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(pendingScoreData)
+                    });
+                    showToast("已成功同步至 Google 試算表！");
+                } catch (e) {
+                    showToast("雲端同步失敗", true);
+                }
+                pendingScoreData = null;
+            }
+            loadingOverlay.classList.add('hidden');
+            startNewGame();
+        }
+
+        if (showLeaderboardBtn) {
+            showLeaderboardBtn.addEventListener('click', async () => {
+                loadingOverlay.classList.remove('hidden');
+                try {
+                    const res = await fetch(GOOGLE_SHEET_API_URL);
+                    const data = await res.json();
+                    
+                    let html = '<table class="w-full text-left text-sm"><thead><tr class="border-b"><th class="py-2">時間</th><th class="py-2">玩家</th><th class="py-2">難度</th><th class="py-2">倍數</th><th class="py-2">步數</th><th class="py-2">秒數</th></tr></thead><tbody>';
+                    if (data && data.length > 0) {
+                        data.sort((a, b) => Number(a.timeSeconds) - Number(b.timeSeconds));
+                        data.slice(0, 10).forEach(row => {
+                            html += `<tr class="border-b"><td class="py-2">${row.dateStr || ''}</td><td class="py-2 font-bold">${row.playerName || ''}</td><td class="py-2">${row.difficulty || ''}</td><td class="py-2">${row.multiple || ''}</td><td class="py-2">${row.steps || ''}</td><td class="py-2">${row.timeSeconds || ''}s</td></tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="6" class="py-4 text-center text-slate-400">目前尚無排行榜紀錄</td></tr>';
+                    }
+                    html += '</tbody></table>';
+                    
+                    leaderboardContent.innerHTML = html;
+                    leaderboardModal.classList.remove('hidden');
+                } catch (e) {
+                    showToast("無法載入排行榜", true);
+                }
                 loadingOverlay.classList.add('hidden');
-            }
-        });
+            });
+        }
 
-        showLeaderboardBtn.addEventListener('click', fetchAndShowLeaderboard);
-        closeLeaderboardBtn.addEventListener('click', () => { leaderboardModal.classList.add('hidden'); });
-        leaderboardModal.addEventListener('click', (e) => {
-            if (e.target === leaderboardModal) leaderboardModal.classList.add('hidden');
-        });
+        if (closeLeaderboardBtn) {
+            closeLeaderboardBtn.addEventListener('click', () => {
+                leaderboardModal.classList.add('hidden');
+            });
+        }
 
-        clearLeaderboardBtn.addEventListener('click', () => {
-            leaderboardModal.classList.add('hidden'); 
-            confirmClearModal.classList.remove('hidden'); 
-        });
-
-        cancelClearBtn.addEventListener('click', () => {
-            confirmClearModal.classList.add('hidden'); 
-            leaderboardModal.classList.remove('hidden'); 
-        });
-
-        confirmClearBtn.addEventListener('click', handleClearRecords);
-
-        document.addEventListener('keydown', handleKeyPress);
-        document.addEventListener('click', setupAudioContext); 
-
-        const style = document.createElement('style');
-        style.textContent = `
-            .shake { animation: shake 0.5s; }
-            @keyframes shake {
-                0% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                50% { transform: translateX(-5px); }
-                75% { transform: translateX(-5px); }
-                100% { transform: translateX(0); }
-            }
-            .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
-            @keyframes bounce-in {
-                0% { opacity: 0; transform: scale(0.3); }
-                50% { opacity: 1; transform: scale(1.05); }
-                70% { transform: scale(0.9); }
-                100% { transform: scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // 啟動遊戲
-        setMultiple(2);
-        startNewGame();
+        document.addEventListener('click', setupAudioContext);
     </script>
 </body>
 </html>
