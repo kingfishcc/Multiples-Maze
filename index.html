@@ -28,7 +28,7 @@
             user-select: none;
             transition: all 0.2s;
             position: relative;
-            background-color: #ffffff; /* 改為不透明的純白，確保在背景圖上清晰可見 */
+            background-color: #ffffff; /* 不透明純白，確保在背景圖上清晰可見 */
             border: 2px solid #e2e8f0;
             border-radius: 0.75rem;
             touch-action: manipulation;
@@ -46,8 +46,8 @@
         }
         
         .icon-marker {
-            width: 70%;
-            height: 70%;
+            width: 75%;
+            height: 75%;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -58,9 +58,10 @@
             justify-content: center;
             align-items: center;
         }
-        .icon-marker svg {
+        .icon-marker img {
             width: 100%;
             height: 100%;
+            object-fit: contain;
         }
 
         .player-ring {
@@ -188,7 +189,7 @@
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
 
-        /* 自訂背景圖片與半透明遮罩 */
+        /* GitHub 根目錄背景圖片與半透明遮罩設定 */
         .theme-jungle {
             background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('jungle.png');
             background-size: cover;
@@ -228,8 +229,8 @@
         <div class="flex flex-col gap-3 w-fit relative">
             
             <div class="w-full flex justify-between items-center gap-4 mb-1">
-                <!-- 移除白色文字與陰影，改回清晰的深色純文字標題 -->
-                <h1 class="text-3xl md:text-4xl font-black text-slate-800 px-2 py-1 whitespace-nowrap">
+                <!-- 純色大標題，無閃爍、無動畫、無底色 -->
+                <h1 class="text-3xl md:text-4xl font-black text-white px-2 py-1 whitespace-nowrap drop-shadow-md">
                     倍數迷宮
                 </h1>
                 <button id="showLeaderboardBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg transition duration-200 flex items-center whitespace-nowrap border border-indigo-400/50">
@@ -436,14 +437,14 @@
         let secondsElapsed = 0;
         let isAiThinking = false;
 
-        // --- 自訂圖片圖示庫 ---
+        // --- GitHub 根目錄自訂圖片圖示庫 ---
         const ICONS = {
-            monkey: `<img src="monkey.png" class="w-full h-full object-contain" alt="猴子">`,
-            banana: `<img src="banana.png" class="w-full h-full object-contain" alt="香蕉">`,
-            dino: `<img src="dino.png" class="w-full h-full object-contain" alt="恐龍">`,
-            egg: `<img src="egg.png" class="w-full h-full object-contain" alt="恐龍蛋">`,
-            astronaut: `<img src="astronaut.png" class="w-full h-full object-contain" alt="太空人">`,
-            rocket: `<img src="rocket.png" class="w-full h-full object-contain" alt="火箭">`
+            monkey: `<img src="monkey.png" alt="猴子">`,
+            banana: `<img src="banana.png" alt="香蕉">`,
+            dino: `<img src="dino.png" alt="恐龍">`,
+            egg: `<img src="egg.png" alt="恐龍蛋">`,
+            astronaut: `<img src="astronaut.png" alt="太空人">`,
+            rocket: `<img src="rocket.png" alt="火箭">`
         };
 
         // --- 常數設定 (Constants) ---
@@ -538,28 +539,21 @@
             }
         };
 
-        // 為太空人難度修正 playerIcon 使用 SVG
-        DIFFICULTY_SETTINGS.hard.playerIcon = ICONS.astronaut;
-
         // --- Auth 邏輯 ---
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         if (initialAuthToken) {
              signInWithCustomToken(auth, initialAuthToken)
                 .then(() => {
-                    console.log("Firebase signed in with custom token");
                     isFirebaseReady = true;
                 })
                 .catch((error) => {
-                    console.error("Firebase custom token authentication failed:", error);
                      signInAnonymously(auth).then(() => {
-                         console.log("Firebase signed in anonymously (fallback)");
                          isFirebaseReady = true;
                      });
                 });
         } else {
              signInAnonymously(auth).then(() => {
-                 console.log("Firebase signed in anonymously");
                  isFirebaseReady = true;
              }).catch((error) => {
                  console.error("Firebase anonymous authentication failed:", error);
@@ -603,7 +597,7 @@
 
         // --- Gemini API 呼叫 ---
         async function callGemini(promptText) {
-             const apiKey = ""; // Leave empty
+             const apiKey = ""; 
              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
              const payload = {
@@ -638,7 +632,6 @@
             if (!isAudioContextInitialized) {
                 await Tone.start();
                 isAudioContextInitialized = true;
-                console.log('Audio Context Started');
             }
         }
 
@@ -646,11 +639,7 @@
             setupAudioContext();
             const noise = new Tone.NoiseSynth({
                 noise: { type: 'brown' },
-                envelope: {
-                    attack: 0.005,
-                    decay: 0.4,
-                    sustain: 0
-                }
+                envelope: { attack: 0.005, decay: 0.4, sustain: 0 }
             }).toDestination();
             noise.volume.value = -5; 
             noise.triggerAttackRelease("8n");
@@ -660,15 +649,9 @@
             setupAudioContext();
             const synth = new Tone.Synth({
                 oscillator: { type: "square" }, 
-                envelope: {
-                    attack: 0.01,
-                    decay: 0.1,
-                    sustain: 0,
-                    release: 0.1
-                }
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
             }).toDestination();
             synth.volume.value = -10; 
-            
             const now = Tone.now();
             synth.triggerAttackRelease("B5", "16n", now);
             synth.triggerAttackRelease("E6", "8n", now + 0.05); 
@@ -688,17 +671,12 @@
         function triggerExplosion(r, c) {
             const cell = document.querySelector(`.maze-cell[data-r="${r}"][data-c="${c}"]`);
             if (!cell) return;
-
             playExplosionSound();
-
             const bomb = document.createElement('div');
             bomb.innerText = '💣';
             bomb.className = 'bomb-effect';
             cell.appendChild(bomb);
-
-            setTimeout(() => {
-                bomb.remove();
-            }, 600);
+            setTimeout(() => { bomb.remove(); }, 600);
         }
 
         // --- AI 功能實作 ---
@@ -730,8 +708,6 @@
                 }
             }
             
-            const setting = DIFFICULTY_SETTINGS[currentDifficulty];
-
             let prompt = `你是一個倍數迷宮遊戲中的小幫手。
             對象：**小學五年級學生**。
             目標倍數：${currentMultiple}。
@@ -741,20 +717,14 @@
             if (targetNumber !== null) {
                 prompt += `
                 正確的下一步數字是：**${targetNumber}**。
-                請根據这个正確數字，給玩家一個「關於判別規則」的提示。
+                請根據這個正確數字，給玩家一個「關於判別規則」的提示。
                 **重要規則：**
-                1. **絕對不要**直接告訴玩家是哪個數字（例如不能說「找尾數是 6 的」或「找加起來是 9 的」）。
+                1. **絕對不要**直接告訴玩家是哪個數字。
                 2. **絕對不要**告訴玩家往「上下左右」哪個方向走。
                 3. **只能**提示「判別的方法」或「計算的動作」。
-                   - 例如 2 的倍數：提示「檢查一下周圍數字的個位數喔！」
-                   - 例如 3 的倍數：提示「試著把周圍數字的每一位數加起來看看？」
-                   - 例如 4 的倍數：提示「觀察一下末兩位數字喔！」
                 4. 請用繁體中文，語氣活潑親切，30字以內。`;
             } else {
-                prompt += `
-                周圍似乎沒有正確的倍數。
-                請建議玩家：「這裡好像沒有路了，試著退回一步看看吧！」
-                `;
+                prompt += `周圍似乎沒有正確的倍數。請建議玩家退回一步看看！`;
             }
 
             try {
@@ -771,21 +741,11 @@
 
         async function generateTreasureDescription() {
             aiTreasureText.innerHTML = '<span class="animate-pulse">正在鑑定中……</span>';
-            
             const setting = DIFFICULTY_SETTINGS[currentDifficulty];
             const prompt = `玩家剛剛完成了一個數學尋寶迷宮。
-            主題：${setting.name}。
-            尋找的倍數：${currentMultiple}。
-            花費時間：${Math.floor(secondsElapsed / 60)}分${secondsElapsed % 60}秒。
+            主題：${setting.name}。尋找的倍數：${currentMultiple}。花費時間：${Math.floor(secondsElapsed / 60)}分${secondsElapsed % 60}秒。
             請發揮創意，生成一個他們在終點找到的寶藏描述。
-            規則：
-            1. **對象是國小六年級學生**。
-            2. 寶藏名稱要簡單帥氣、符合該主題。
-            3. 格式要求：
-               【寶藏名稱】
-               寶藏描述內容（用繁體中文，語氣活潑、給予大大鼓勵）。
-            4. **絕對不要**使用 Markdown 的粗體符號（**）。
-            5. 總長度 50 字以內。`;
+            規則：對象是國小六年級學生，寶藏名稱要簡單帥氣，總長度 50 字以內，不要用 ** 符號。`;
 
             try {
                 let description = await callGemini(prompt);
@@ -857,8 +817,8 @@
             updatePathVisuals();
             isGameActive = true;
             gameStatusDiv.textContent = `重新開始新的冒險篇章！`;
-             gameStatusDiv.className = 'text-xl font-bold text-white drop-shadow';
-             aiHintContainer.classList.add('hidden');
+            gameStatusDiv.className = 'text-xl font-bold text-white drop-shadow';
+            aiHintContainer.classList.add('hidden');
         }
 
         function resetGameState() {
@@ -950,14 +910,7 @@
 
             for (let r = 0; r < mazeSize; r++) {
                 for (let c = 0; c < mazeSize; c++) {
-                    const isPath = path.some((p, idx) => {
-                        if (p.r === r && p.c === c) {
-                            if (idx === zeroPathIndex) return true; 
-                            return true;
-                        }
-                        return false;
-                    });
-                    
+                    const isPath = path.some((p, idx) => p.r === r && p.c === c);
                     const isZeroSpot = path.some((p, idx) => p.r === r && p.c === c && idx === zeroPathIndex);
 
                     let num;
@@ -987,7 +940,6 @@
 
             while (attempts < maxAttempts) {
                 attempts++;
-
                 const rand = Math.random();
                 let selectedRange = config.ranges[0];
                 let cumulativeWeight = 0;
@@ -1004,7 +956,6 @@
                     let minFactor = Math.ceil(selectedRange.min / base);
                     if (minFactor === 0) minFactor = 1;
                     let minMultiple = minFactor * base; 
-                    
                     let maxFactor = Math.floor(selectedRange.max / base);
                     let maxMultiple = maxFactor * base;
 
@@ -1013,12 +964,10 @@
                     }
 
                     if (minMultiple < selectedRange.min) minFactor += 1;
-
                     if (minFactor > maxFactor) continue;
 
                     const randomFactor = Math.floor(Math.random() * (maxFactor - minFactor + 1)) + minFactor;
                     candidate = randomFactor * base;
-
                 } else {
                     candidate = Math.floor(Math.random() * (selectedRange.max - selectedRange.min + 1)) + selectedRange.min;
                     if (candidate % base === 0 && candidate !== 0) continue;
@@ -1029,7 +978,6 @@
                 }
             }
             
-            // Fallback
             if (needMultiple) {
                 let fallback = base * (Math.floor(Math.random() * 10) + 1);
                 while(usedNumbers.has(fallback)) fallback += base;
@@ -1100,9 +1048,7 @@
             if (!isGameActive) return;
 
             if (r === playerPos.r && c === playerPos.c) {
-                if (!hasStarted) {
-                    startGameLogic();
-                }
+                if (!hasStarted) startGameLogic();
                 return;
             }
 
@@ -1115,10 +1061,7 @@
 
         function handleKeyPress(e) {
             if (!isGameActive) return;
-            
-            if (!hasStarted) {
-                startGameLogic();
-            }
+            if (!hasStarted) startGameLogic();
 
             let newR = playerPos.r;
             let newC = playerPos.c;
@@ -1152,9 +1095,7 @@
                 }
             }
 
-            if (!hasStarted) {
-                startGameLogic();
-            }
+            if (!hasStarted) startGameLogic();
 
             const targetNum = mazeData[r][c];
             if (targetNum % currentMultiple === 0) {
@@ -1234,7 +1175,6 @@
                     const nc = c + d.dc;
                     if (nr >= 0 && nr < mazeSize && nc >= 0 && nc < mazeSize) {
                         const isVisited = pathHistory.some(pos => pos.r === nr && pos.c === nc);
-                        
                         if (!isVisited) {
                              const cell = document.querySelector(`.maze-cell[data-r="${nr}"][data-c="${nc}"]`);
                              if (cell) cell.classList.add('highlight-move');
@@ -1264,7 +1204,6 @@
             </div>`;
             
             generateTreasureDescription();
-            
             winModal.classList.remove('hidden');
             setTimeout(() => playerNameInput.focus(), 100);
         }
@@ -1287,10 +1226,7 @@
                     noDataMsg.classList.remove('hidden');
                 } else {
                     const scores = [];
-                    querySnapshot.forEach((doc) => {
-                        scores.push(doc.data());
-                    });
-
+                    querySnapshot.forEach((doc) => { scores.push(doc.data()); });
                     scores.sort((a, b) => {
                         const timeA = a.timestamp ? a.timestamp.seconds : 0;
                         const timeB = b.timestamp ? b.timestamp.seconds : 0;
@@ -1305,11 +1241,6 @@
                         if (data.difficultyKey === 'easy') difficultyText = '簡單';
                         else if (data.difficultyKey === 'medium') difficultyText = '中等';
                         else if (data.difficultyKey === 'hard') difficultyText = '挑戰';
-                        else if (typeof data.difficulty === 'string') {
-                             if (data.difficulty.includes('簡單')) difficultyText = '簡單';
-                             else if (data.difficulty.includes('中等')) difficultyText = '中等';
-                             else if (data.difficulty.includes('挑戰')) difficultyText = '挑戰';
-                        }
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -1334,31 +1265,23 @@
         async function handleClearRecords() {
             loadingOverlay.classList.remove('hidden');
             confirmClearModal.classList.add('hidden');
-        
             if (!isFirebaseReady) {
                 showToast("資料庫未連線，無法刪除。", true);
                 loadingOverlay.classList.add('hidden');
                 return;
             }
-        
             try {
-                const scoresCollection = collection(db, SCORES_COLLECTION);
-                const querySnapshot = await getDocs(scoresCollection);
-        
-                if (querySnapshot.empty) {
-                    showToast("紀錄本來就是空的！", false); 
-                } else {
+                const querySnapshot = await getDocs(collection(db, SCORES_COLLECTION));
+                if (!querySnapshot.empty) {
                     const deletePromises = [];
-                    querySnapshot.forEach((doc) => {
-                        deletePromises.push(deleteDoc(doc.ref));
-                    });
+                    querySnapshot.forEach((docRefDoc) => { deletePromises.push(deleteDoc(docRefDoc.ref)); });
                     await Promise.all(deletePromises);
                     showToast("所有紀錄已成功清除！", false);
+                } else {
+                    showToast("紀錄本來就是空的！", false);
                 }
-        
             } catch (e) {
-                console.error("Error clearing collection: ", e);
-                showToast(`清除失敗: ${e.message}`, true); // true = error
+                showToast(`清除失敗: ${e.message}`, true);
             } finally {
                 loadingOverlay.classList.add('hidden');
                 fetchAndShowLeaderboard(); 
@@ -1367,15 +1290,9 @@
 
         function showToast(message, isError = false) {
             toast.textContent = message;
-            if (isError) {
-                toast.style.backgroundColor = '#ef4444'; 
-            } else {
-                toast.style.backgroundColor = '#10b981'; 
-            }
+            toast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
         // --- 初始化事件 ---
@@ -1386,8 +1303,7 @@
 
         multipleButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                const mult = parseInt(btn.dataset.multiple);
-                setMultiple(mult);
+                setMultiple(parseInt(btn.dataset.multiple));
                 startNewGame();
             });
         });
@@ -1423,13 +1339,11 @@
                     timeSeconds: secondsElapsed,
                     timestamp: Timestamp.now()
                 });
-                
                 localStorage.setItem('lastPlayerName', playerName);
                 winModal.classList.add('hidden');
                 showToast("冒險紀錄儲存成功"); 
                 startNewGame();
             } catch (e) {
-                console.error("Error adding document: ", e);
                 alert("儲存失敗，請檢查網路連線。");
             } finally {
                 loadingOverlay.classList.add('hidden');
@@ -1437,13 +1351,9 @@
         });
 
         showLeaderboardBtn.addEventListener('click', fetchAndShowLeaderboard);
-        closeLeaderboardBtn.addEventListener('click', () => {
-            leaderboardModal.classList.add('hidden');
-        });
+        closeLeaderboardBtn.addEventListener('click', () => { leaderboardModal.classList.add('hidden'); });
         leaderboardModal.addEventListener('click', (e) => {
-            if (e.target === leaderboardModal) {
-                leaderboardModal.classList.add('hidden');
-            }
+            if (e.target === leaderboardModal) leaderboardModal.classList.add('hidden');
         });
 
         clearLeaderboardBtn.addEventListener('click', () => {
@@ -1484,7 +1394,6 @@
         // 啟動遊戲
         setMultiple(2);
         startNewGame();
-
     </script>
 </body>
 </html>
