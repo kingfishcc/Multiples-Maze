@@ -46,8 +46,8 @@
         }
         
         .icon-marker {
-            width: 75%;
-            height: 75%;
+            width: 80%;
+            height: 80%;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -189,7 +189,7 @@
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
 
-        /* GitHub 根目錄背景圖片與半透明遮罩設定 */
+        /* 對應您在 GitHub 根目錄上傳的背景圖片：jungle.png, Jurassic.png, universe.png */
         .theme-jungle {
             background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('jungle.png');
             background-size: cover;
@@ -229,7 +229,7 @@
         <div class="flex flex-col gap-3 w-fit relative">
             
             <div class="w-full flex justify-between items-center gap-4 mb-1">
-                <!-- 純色大標題，無閃爍、無動畫、無底色 -->
+                <!-- 大標題改回純色，無閃爍動畫、無底色 -->
                 <h1 class="text-3xl md:text-4xl font-black text-white px-2 py-1 whitespace-nowrap drop-shadow-md">
                     倍數迷宮
                 </h1>
@@ -437,7 +437,7 @@
         let secondsElapsed = 0;
         let isAiThinking = false;
 
-        // --- GitHub 根目錄自訂圖片圖示庫 ---
+        // --- 直接對應您的 GitHub 根目錄圖片檔名 ---
         const ICONS = {
             monkey: `<img src="monkey.png" alt="猴子">`,
             banana: `<img src="banana.png" alt="香蕉">`,
@@ -1377,7 +1377,7 @@
             @keyframes shake {
                 0% { transform: translateX(0); }
                 25% { transform: translateX(-5px); }
-                50% { transform: translateX(5px); }
+                50% { transform: translateX(-5px); }
                 75% { transform: translateX(-5px); }
                 100% { transform: translateX(0); }
             }
